@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const mongoose = require('mongoose');
 
 const app = express();
 const server = http.createServer(app);
@@ -8,68 +9,111 @@ const io = socketIo(server);
 
 const port = process.env.PORT || 3000;
 
-let users = [];
-let matches = {};
+// Use the environment variable for MongoDB connection string
+const mongoUri = process.env.MONGODB_URI;
+
+mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.log(err));
+
+const userSchema = new mongoose.Schema({
+  id: String,
+  userName: String,
+  r: Number,
+  g: Number,
+  b: Number,
+  x: Number,
+  y: Number,
+  matchedWith: String
+});
+
+const User = mongoose.model('User', userSchema);
 
 io.on('connection', (socket) => {
     console.log('New client connected');
 
-    socket.on('selectColor', (color) => {
-        // Check if user already exists in the users list and update their color
-        const existingUserIndex = users.findIndex(user => user.id === socket.id);
-        if (existingUserIndex !== -1) {
-            users[existingUserIndex] = { ...color, id: socket.id };
-        } else {
-            users.push({ ...color, id: socket.id });
+    socket.on('selectColor', async (color) => {
+        try {
+            let user = await User.findOne({ id: socket.id });
+            if (user) {
+                user.r = color.r;
+                user.g = color.g;
+                user.b = color.b;
+                user.x = color.x;
+                user.y = color.y;
+                user.userName = color.userName;
+            } else {
+                user = new User({ ...color, id: socket.id });
+            }
+            await user.save();
+            socket.color = color;
+            console.log('Color selected:', color);
+        } catch (err) {
+            console.log(err);
         }
-        socket.color = color;
-        console.log('Color selected:', color);
     });
 
-    socket.on('match', () => {
-        // Break existing match if user is already matched
-        if (matches[socket.id]) {
-            const partnerId = matches[socket.id];
-            delete matches[socket.id];
-            delete matches[partnerId];
-        }
+    socket.on('match', async () => {
+        try {
+            const user = await User.findOne({ id: socket.id });
+            if (!user) return;
 
-        if (users.length < 2) {
-            io.to(socket.id).emit('matchResult', 'No match found. Waiting for another user.');
-            return;
-        }
+            if (user.matchedWith) {
+                const partner = await User.findOne({ id: user.matchedWith });
+                if (partner) {
+                    partner.matchedWith = null;
+                    await partner.save();
+                }
+                user.matchedWith = null;
+                await user.save();
+            }
 
-        let closestUser = null;
-        let shortestDistance = Infinity;
+            const users = await User.find({ matchedWith: null, id: { $ne: socket.id } });
+            if (users.length < 1) {
+                io.to(socket.id).emit('matchResult', 'No match found. Waiting for another user.');
+                return;
+            }
 
-        for (const user of users) {
-            if (user.id !== socket.id && !matches[user.id]) {  // Ensure the user does not match with themselves or a matched user
-                const distance = calculateDistance(socket.color, user);
+            let closestUser = null;
+            let shortestDistance = Infinity;
+
+            for (const potentialMatch of users) {
+                const distance = calculateDistance(user, potentialMatch);
                 if (distance < shortestDistance) {
                     shortestDistance = distance;
-                    closestUser = user;
+                    closestUser = potentialMatch;
                 }
             }
-        }
 
-        if (closestUser) {
-            io.to(socket.id).emit('matchResult', `Matched with ${closestUser.userName} at R: ${closestUser.r}, G: ${closestUser.g}, B: ${closestUser.b}`);
-            io.to(closestUser.id).emit('matchResult', `Matched with ${socket.color.userName} at R: ${socket.color.r}, G: ${socket.color.g}, B: ${socket.color.b}`);
-            matches[socket.id] = closestUser.id;
-            matches[closestUser.id] = socket.id;
-        } else {
-            io.to(socket.id).emit('matchResult', 'No match found.');
+            if (closestUser) {
+                user.matchedWith = closestUser.id;
+                closestUser.matchedWith = user.id;
+                await user.save();
+                await closestUser.save();
+                io.to(socket.id).emit('matchResult', `Matched with ${closestUser.userName} at R${closestUser.r}, G${closestUser.g}, B${closestUser.b}`);
+                io.to(closestUser.id).emit('matchResult', `Matched with ${user.userName} at R${user.r}, G${user.g}, B${user.b}`);
+            } else {
+                io.to(socket.id).emit('matchResult', 'No match found.');
+            }
+        } catch (err) {
+            console.log(err);
         }
     });
 
-    socket.on('disconnect', () => {
-        users = users.filter(user => user.id !== socket.id);
-        const partnerId = matches[socket.id];
-        if (partnerId) {
-            delete matches[socket.id];
-            delete matches[partnerId];
+    socket.on('disconnect', async () => {
+        try {
+            const user = await User.findOneAndDelete({ id: socket.id });
+            if (user && user.matchedWith) {
+                const partner = await User.findOne({ id: user.matchedWith });
+                if (partner) {
+                    partner.matchedWith = null;
+                    await partner.save();
+                }
+            }
+            console.log('Client disconnected');
+        } catch (err) {
+            console.log(err);
         }
-        console.log('Client disconnected');
     });
 });
 
