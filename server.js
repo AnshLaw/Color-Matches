@@ -12,9 +12,12 @@ const port = process.env.PORT || 3000;
 // Use the environment variable for MongoDB connection string
 const mongoUri = process.env.MONGODB_URI;
 
-mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongoUri)
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1); // Exit the application if the connection fails
+  });
 
 const userSchema = new mongoose.Schema({
   id: String,
@@ -49,7 +52,7 @@ io.on('connection', (socket) => {
             socket.color = color;
             console.log('Color selected:', color);
         } catch (err) {
-            console.log(err);
+            console.error('Error selecting color:', err);
         }
     });
 
@@ -96,7 +99,7 @@ io.on('connection', (socket) => {
                 io.to(socket.id).emit('matchResult', 'No match found.');
             }
         } catch (err) {
-            console.log(err);
+            console.error('Error during match:', err);
         }
     });
 
@@ -112,7 +115,7 @@ io.on('connection', (socket) => {
             }
             console.log('Client disconnected');
         } catch (err) {
-            console.log(err);
+            console.error('Error during disconnect:', err);
         }
     });
 });
