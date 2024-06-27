@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColorSpace</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="overlay" id="overlay">
+        <div class="overlay-content">
+            <h2>Enter your name</h2>
+            <input type="text" id="nameInput" placeholder="Your Name">
+            <button id="nameSubmitButton">Submit</button>
+        </div>
+    </div>
+    <div class="profile" id="profile">
+        <img src="profile.png" alt="Profile Picture">
+        <span id="profileName"></span>
+    </div>
+    <div class="container">
+        <h1>ColorSpace</h1>
+        <p>Find your random match by using color.</p>
+        <canvas id="colorWheel" class="color-wheel" width="300" height="300"></canvas>
+        <div class="match-button">
+            <p id="colorCode" class="color-code">R: 0 G: 0 B: 0</p>
+            <button id="matchButton">Match</button>
+        </div>
+        <div id="matchResult" class="match-result"></div>
+    </div>
+    <div id="boundingCircle" class="bounding-circle"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
