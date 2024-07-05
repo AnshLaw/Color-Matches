@@ -164,5 +164,29 @@ window.onload = function() {
 
     socket.on('matchResult', function(result) {
         matchResult.textContent = result;
+        if (result.startsWith('Matched')) {
+            chatContainer.classList.remove('hidden');
+        }
+    });
+
+    sendButton.addEventListener('click', function() {
+        const message = messageInput.value;
+        if (message.trim()) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `You: ${message}`;
+            chatWindow.appendChild(messageElement);
+            messageInput.value = '';
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            // Send the message to the server
+            socket.emit('chatMessage', message);
+        }
+    });
+
+    socket.on('chatMessage', function(message) {
+        const messageElement = document.createElement('div');
+        messageElement.textContent = message;
+        chatWindow.appendChild(messageElement);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
     });
 }

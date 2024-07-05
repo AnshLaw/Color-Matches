@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColorSpace</title>
+    <title>ColoMatches</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
         <span id="profileName"></span>
     </div>
     <div class="container">
-        <h1>ColorSpace</h1>
+        <h1>ColorMatches</h1>
         <p>Find your random match by using color.</p>
         <canvas id="colorWheel" class="color-wheel" width="300" height="300"></canvas>
         <div class="match-button">
@@ -27,6 +27,11 @@
             <button id="matchButton">Match</button>
         </div>
         <div id="matchResult" class="match-result"></div>
+    </div>
+    <div id="chat-container" class="hidden">
+        <div id="chat-window"></div>
+        <input type="text" id="message-input" placeholder="Type a message...">
+        <button id="send-button">Send</button>
     </div>
     <div id="boundingCircle" class="bounding-circle"></div>
     <script src="/socket.io/socket.io.js"></script>

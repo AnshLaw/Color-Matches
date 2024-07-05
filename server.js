@@ -95,11 +95,26 @@ io.on('connection', (socket) => {
                 await closestUser.save();
                 io.to(socket.id).emit('matchResult', `Matched with ${closestUser.userName} at R${closestUser.r}, G${closestUser.g}, B${closestUser.b}`);
                 io.to(closestUser.id).emit('matchResult', `Matched with ${user.userName} at R${user.r}, G${user.g}, B${user.b}`);
+
+                // Notify both users to open the chat
+                io.to(socket.id).emit('openChat');
+                io.to(closestUser.id).emit('openChat');
             } else {
                 io.to(socket.id).emit('matchResult', 'No match found.');
             }
         } catch (err) {
             console.error('Error during match:', err);
+        }
+    });
+
+    socket.on('chatMessage', async (message) => {
+        try {
+            const user = await User.findOne({ id: socket.id });
+            if (user && user.matchedWith) {
+                io.to(user.matchedWith).emit('chatMessage', `${user.userName}: ${message}`);
+            }
+        } catch (err) {
+            console.error('Error sending chat message:', err);
         }
     });
 
