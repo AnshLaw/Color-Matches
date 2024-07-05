@@ -12,6 +12,10 @@ window.onload = function() {
     const nameSubmitButton = document.getElementById('nameSubmitButton');
     const profileName = document.getElementById('profileName');
     const profile = document.getElementById('profile');
+    const chatContainer = document.getElementById('chat-container');
+    const chatWindow = document.getElementById('chat-window');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
 
     const width = canvas.width;
     const height = canvas.height;

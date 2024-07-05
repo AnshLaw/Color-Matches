@@ -36,6 +36,7 @@ io.on('connection', (socket) => {
     console.log('New client connected');
 
     socket.on('selectColor', async (color) => {
+        console.log('Color selected:', color);
         try {
             let user = await User.findOne({ id: socket.id });
             if (user) {
@@ -57,6 +58,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('match', async () => {
+        console.log('Match requested');
         try {
             const user = await User.findOne({ id: socket.id });
             if (!user) return;
@@ -108,6 +110,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chatMessage', async (message) => {
+        console.log('Chat message received:', message);
         try {
             const user = await User.findOne({ id: socket.id });
             if (user && user.matchedWith) {
