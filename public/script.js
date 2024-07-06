@@ -173,26 +173,19 @@ window.onload = function() {
         }
     });
 
-    sendButton.addEventListener('click', function() {
-        const message = messageInput.value;
-        console.log('Sending message:', message);
-        if (message.trim()) {
-            const messageElement = document.createElement('div');
-            messageElement.textContent = `You: ${message}`;
-            chatWindow.appendChild(messageElement);
-            messageInput.value = '';
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+    document.getElementById('send').addEventListener('click', sendMessage);
 
-            // Send the message to the server
-            socket.emit('chatMessage', message);
-        }
-    });
+    function sendMessage() {
+        const message = document.getElementById('message').value;
+        socket.emit('chatMessage', message);
+        document.getElementById('message').value = '';
+    }
 
-    socket.on('chatMessage', function(message) {
-        console.log('Message received:', message);
+    socket.on('chatMessage', (msg) => {
+        const output = document.getElementById('output');
         const messageElement = document.createElement('div');
-        messageElement.textContent = message;
-        chatWindow.appendChild(messageElement);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+        messageElement.textContent = msg;
+        output.appendChild(messageElement);
+        output.scrollTop = output.scrollHeight;
     });
 };
