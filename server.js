@@ -110,16 +110,18 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chatMessage', async (message) => {
-        console.log('Chat message received:', message);
         try {
+            console.log('Received chat message:', message);
             const user = await User.findOne({ id: socket.id });
             if (user && user.matchedWith) {
+                console.log(`Sending message from ${user.userName} to ${user.matchedWith}: ${message}`);
                 io.to(user.matchedWith).emit('chatMessage', `${user.userName}: ${message}`);
             }
         } catch (err) {
             console.error('Error sending chat message:', err);
         }
     });
+    
 
     socket.on('disconnect', async () => {
         try {

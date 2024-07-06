@@ -175,6 +175,7 @@ window.onload = function() {
 
     sendButton.addEventListener('click', function() {
         const message = messageInput.value;
+        console.log('Sending message:', message);
         if (message.trim()) {
             const messageElement = document.createElement('div');
             messageElement.textContent = `You: ${message}`;
@@ -188,9 +189,10 @@ window.onload = function() {
     });
 
     socket.on('chatMessage', function(message) {
+        console.log('Message received:', message);
         const messageElement = document.createElement('div');
         messageElement.textContent = message;
         chatWindow.appendChild(messageElement);
         chatWindow.scrollTop = chatWindow.scrollHeight;
     });
-}
+};
